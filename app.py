@@ -233,7 +233,7 @@ def profile():
 
             db.session.commit()
 
-            return redirect('/')
+            return redirect(f'/users/{user.id}')
 
         else:
             flash('Incorrect password', 'danger')
