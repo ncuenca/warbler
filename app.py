@@ -108,7 +108,7 @@ def login():
 
     return render_template('users/login.html', form=form)
 
-
+#TODO: make it a post request
 @app.route('/logout')
 def logout():
     """Handle logout of user."""
@@ -214,11 +214,11 @@ def profile():
         return redirect("/")
 
     form = UpdateUserForm(
-        username = g.user.username,
-        email = g.user.email,
-        image_url = g.user.image_url,
-        header_image_url = g.user.header_image_url,
-        bio = g.user.bio
+        username=g.user.username,
+        email=g.user.email,
+        image_url=g.user.image_url,
+        header_image_url=g.user.header_image_url,
+        bio=g.user.bio
     )
 
     if form.validate_on_submit():
@@ -227,8 +227,8 @@ def profile():
         if user:
             user.username = form.username.data
             user.email = form.email.data,
-            user.image_url = form.image_url.data,
-            user.header_image_url = form.header_image_url.data,
+            user.image_url = form.image_url.data or User.image_url.default.arg,
+            user.header_image_url = form.header_image_url.data or User.header_image_url.default.arg,
             user.bio = form.bio.data
 
             db.session.commit()
