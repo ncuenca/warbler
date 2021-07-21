@@ -310,8 +310,8 @@ def messages_destroy(message_id):
 ##############################################################################
 # Likes routes:
 @app.route('/messages/<int:message_id>/like', methods=["POST"])
-def messages_destroy(message_id):
-    """Delete a message."""
+def like_message(message_id):
+    """Like a message."""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -320,7 +320,7 @@ def messages_destroy(message_id):
     msg = Message.query.get(message_id)
 
     if msg.is_liked_by(g.user):
-        like = Like.query.get(g.user.id, message_id)
+        like = Like.query.get((g.user.id, message_id))
         db.session.delete(like)
         db.session.commit()
     else:
@@ -328,7 +328,15 @@ def messages_destroy(message_id):
         db.session.add(like)
         db.session.commit()
 
-    return redirect(f"/users/{g.user.id}")
+    return redirect(f"/users/{g.user.id}/likes")
+
+@app.route('/users/<int:user_id>/likes')
+def liked_messages_show(user_id):
+    """Show user's likes"""
+
+    user = User.query.get_or_404(user_id)
+
+    return render_template('messages/liked.html', user=user)
 
 ##############################################################################
 # Homepage and error pages
