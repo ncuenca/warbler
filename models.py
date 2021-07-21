@@ -73,6 +73,7 @@ class User(db.Model):
     )
 
     messages = db.relationship('Message', order_by='Message.timestamp.desc()')
+    liked_messages = db.relationship('Message', secondary="likes", backref='liked_by')
 
     followers = db.relationship(
         "User",
@@ -172,6 +173,27 @@ class Message(db.Model):
 
     user = db.relationship('User')
 
+    def is_liked_by(self, user):
+        '''Is this message liked by this user'''
+        liked_user_list = [liked_by_user for liked_by_user in self.liked_by if user == liked_by_user]
+        return len(liked_user_list) == 1
+
+class Like(db.Model):
+    '''Likes'''
+
+    __tablename__ = 'likes'
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete="cascade"),
+        primary_key=True,
+    )
+
+    message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id', ondelete="cascade"),
+        primary_key=True,
+    )
 
 def connect_db(app):
     """Connect this database to provided Flask app.
