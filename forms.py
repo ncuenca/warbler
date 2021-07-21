@@ -33,3 +33,8 @@ class UpdateUserForm(FlaskForm):
     header_image_url = StringField('Header Image URL')
     bio = StringField('Bio')
     password = PasswordField('Password', validators=[Length(min=6)])
+
+class OnlyCsrfForm(FlaskForm):
+    """For actions where we want CSRF protection, but don't need any fields.
+
+    """
