@@ -53,6 +53,7 @@ class UserModelTestCase(TestCase):
         self.client = app.test_client()
 
     def tearDown(self):
+        """Rollback db.session"""
         db.session.rollback()
 
     
