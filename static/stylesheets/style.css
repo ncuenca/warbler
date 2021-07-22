@@ -287,6 +287,12 @@ nav + .container {
   background-color: #e6ecf0;
 }
 
+#messages .fa-star {
+  position: absolute;
+  top: 10px;
+  right: 35px;
+}
+
 #sidebar-username {
   margin-top: 30px;
   font-size: 21px;
