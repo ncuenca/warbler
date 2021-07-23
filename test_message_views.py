@@ -43,38 +43,31 @@ class MessageViewTestCase(TestCase):
 
         self.client = app.test_client()
 
-        self.test_user0 = User.signup(username="user0",
-                                    email="test0@test.com",
-                                    password="password0",
+        self.test_user = User.signup(username="user",
+                                    email="test@test.com",
+                                    password="password",
                                     image_url=None)
-        self.test_user1 = User.signup(username="user1",
-                                    email="test1@test.com",
-                                    password="password1",
-                                    image_url=None)
-        self.test_user2 = User.signup(username="user2",
-                                    email="test2@test.com",
-                                    password="password2",
-                                    image_url=None)
+        self.user_id = 100000                                
+        self.test_user.id = self.user_id                                  
 
-        self.user0_id = 100000                                
-        self.user1_id = 100001                                   
-        self.user2_id = 100002
+        msg = Message(id=100000, text='test message', user_id=self.user_id)  
+        self.msg = msg
+        self.msg_id = 100000                        
 
-        self.test_user0.id = self.user0_id                                  
-        self.test_user1.id = self.user1_id                                  
-        self.test_user2.id = self.user2_id                                  
-
+        db.session.add(msg)
         db.session.commit()
 
     def test_add_message(self):
         """Can user add a message?"""
 
+        Message.query.delete()
+        db.session.commit()
+
         # Since we need to change the session to mimic logging in,
         # we need to use the changing-session trick:
-
         with self.client as c:
             with c.session_transaction() as sess:
-                sess[CURR_USER_KEY] = self.user0_id
+                sess[CURR_USER_KEY] = self.user_id
 
             # Now, that session setting is saved, so we can have
             # the rest of ours test
@@ -97,18 +90,13 @@ class MessageViewTestCase(TestCase):
     def test_delete_message(self):
         """Can user delete a message?"""
 
-        msg = Message(id=100001, text='delete this', user_id=self.user0_id)
-
-        db.session.add(msg)
-        db.session.commit()
-
         with self.client as c:
             with c.session_transaction() as sess:
-                sess[CURR_USER_KEY] = self.user0_id
+                sess[CURR_USER_KEY] = self.user_id
 
             self.assertEqual(len(Message.query.all()), 1)
 
-            resp = c.post(f"/messages/100001/delete")
+            resp = c.post(f"/messages/{self.msg_id}/delete")
 
             self.assertEqual(resp.status_code, 302)
             self.assertEqual(len(Message.query.all()), 0)
@@ -116,13 +104,17 @@ class MessageViewTestCase(TestCase):
     def test_not_logged_in_delete_message(self):
         """If a user isn't logged in and tries to delete a message, 
            response 200 should be returned."""
-        
-        msg = Message(id=100001, text='delete this', user_id=self.user0_id)
-
-        db.session.add(msg)
-        db.session.commit()
 
         with self.client as c:
-            resp = c.post(f"/messages/{msg.id}/delete", follow_redirects=True)
+            resp = c.post(f"/messages/{self.msg_id}/delete", follow_redirects=True)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access unauthorized", str(resp.data))
+
+    def test_message_page(self):
+        """Does a message's page properly display the message information?"""
+
+        with self.client as c:
+            resp = c.get(f"/messages/{self.msg_id}", follow_redirects=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("user", str(resp.data))
+            self.assertIn("test message", str(resp.data))
