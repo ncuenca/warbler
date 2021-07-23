@@ -1,7 +1,7 @@
 "use strict"
 
 /** handles favoriteclick event by changing favorite icon and
- *  adding/removing favorite frmo db
+ *  adding/removing favorite from db
  */
  async function favoriteClick(evt) {
   evt.preventDefault();
@@ -16,10 +16,7 @@
     $(evt.target).attr("style", "color:rgb(244, 244, 51)");
   }
 
-  const response = await axios({
-    url: `/messages/${msgId}/like`,
-    method: "POST"
-  });
+  axios({url: `/messages/${msgId}/like`, method: "POST"});
 }
 
 $("#messages").on("click", ".fa-star", favoriteClick);
