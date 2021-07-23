@@ -5,7 +5,7 @@
  */
  async function favoriteClick(evt) {
   evt.preventDefault();
-  let msgId = $(evt.target).closest('div').attr('id');
+  let msgId = $(evt.target).closest('div').data('message-id');
 
   // if message is liked
   if (evt.target.className === "fa fa-star") {
