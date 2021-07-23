@@ -12,7 +12,7 @@
           </a>
           <div class="message-area">
             <div class="message-heading">
-              <a href="/users/{{ message.user.id }}">@{{ message.user.username }}</a>
+              <h3><a href="/users/{{ message.user.id }}">@{{ message.user.username }}</a></h3>
               {% if g.user %}
                 {% if g.user.id == message.user.id %}
                   <form method="POST"
@@ -33,6 +33,13 @@
             </div>
             <p class="single-message">{{ message.text }}</p>
             <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
+            {% if message.user_id != g.user.id %}
+                {% if message.is_liked_by(g.user) %}
+                  <i class="fa fa-star" style="color:rgb(244, 244, 51)"></i>
+                {% else %}
+                  <i class="far fa-star" style="color:black"></i>
+                {% endif %}
+              {% endif %}
           </div>
         </li>
       </ul>

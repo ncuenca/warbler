@@ -510,13 +510,13 @@ p.card-bio {
 
 #messages.no-hover .message-heading {
   display: flex;
-  justify-content: space-between;
   height: 47px;
   margin-top: 3px;
 }
 
 #messages.no-hover .message-heading .btn {
   min-width: 105px;
+  margin-left: 10px;
 }
 
 .messages-like {
