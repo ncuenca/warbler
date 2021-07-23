@@ -31,6 +31,7 @@ class UpdateUserForm(FlaskForm):
     email = StringField('E-mail', validators=[DataRequired(), Email()])
     image_url = StringField('Image URL')
     header_image_url = StringField('Header Image URL')
+    location = StringField('Location')
     bio = StringField('Bio')
     password = PasswordField('Password', validators=[Length(min=6)])
 
