@@ -29,7 +29,7 @@ db.create_all()
 
 
 class UserModelTestCase(TestCase):
-    """Test views for messages."""
+    """Test models for messages."""
 
     def setUp(self):
         """Create test client, add sample data."""
@@ -38,13 +38,17 @@ class UserModelTestCase(TestCase):
         Message.query.delete()
         Follows.query.delete()
 
-        user0 = User(username='test0', email='test0@email.com', password='password0')
-        user1 = User(username='test1', email='test1@email.com', password='password1')
-        
-        user0.id = 100
-        user1.id = 101
+        user0 = User.signup(
+                            username='test0', 
+                            email='test0@email.com', 
+                            password='password0',
+                            image_url=None)
+        user1 = User.signup(
+                            username='test1', 
+                            email='test1@email.com', 
+                            password='password1',
+                            image_url=None)
 
-        db.session.add_all([user0, user1])
         db.session.commit()
 
         self.user0 = user0
@@ -79,8 +83,8 @@ class UserModelTestCase(TestCase):
     def test_user_repr(self):
         """Does the repr work as intended?"""
 
-        self.assertEqual(self.user0.__repr__(), "<User #100: test0, test0@email.com>")
-        self.assertEqual(self.user1.__repr__(), "<User #101: test1, test1@email.com>")
+        self.assertEqual(self.user0.__repr__(), f"<User #{self.user0.id}: test0, test0@email.com>")
+        self.assertEqual(self.user1.__repr__(), f"<User #{self.user1.id}: test1, test1@email.com>")
 
     def test_valid_user_signup(self):
         """Does user signup work as intended?"""
@@ -88,6 +92,7 @@ class UserModelTestCase(TestCase):
         self.assertEqual(len(User.query.all()), 2)
         
         user2 = User.signup('test2', 'test2@email.com', 'password2', None)
+        db.session.commit()
 
         self.assertEqual(len(User.query.all()), 3)
         self.assertNotEqual(user2.password, 'password2') 
@@ -130,10 +135,10 @@ class UserModelTestCase(TestCase):
     def test_user_authentication(self):
         """Does user authentication work"""
 
-        user2 = User.signup('test2', 'test2@email.com', 'password2', None)
+        User.signup('test2', 'test2@email.com', 'password2', None)
 
-        valid = User.authenticate('test2', 'password2')
-        self.assertIsNotNone(valid, True)
+        valid_user = User.authenticate('test2', 'password2')
+        self.assertIsNotNone(valid_user, True)
 
         invalid_user = User.authenticate('test5', 'password5')
         self.assertEqual(invalid_user, False)
@@ -143,10 +148,11 @@ class UserModelTestCase(TestCase):
 
     #### FOLLOW TESTS
     def test_user_follows(self):
-        """Does following work as intended?"""
+        """Does following/followers work as intended?"""
 
         self.assertEqual(len(self.user0.following), 0)
         self.assertEqual(len(self.user0.followers), 0)
+
         self.assertEqual(len(self.user1.following), 0)
         self.assertEqual(len(self.user1.followers), 0)
 
@@ -155,11 +161,12 @@ class UserModelTestCase(TestCase):
 
         self.assertEqual(len(self.user0.following), 1)
         self.assertEqual(len(self.user0.followers), 0)
+
         self.assertEqual(len(self.user1.following), 0)
         self.assertEqual(len(self.user1.followers), 1)
 
     def test_user_is_following(self):
-        '''Does {user}.is_following({other_user}) work as intended'''
+        """Does {user}.is_following({other_user}) work as intended"""
 
         self.assertEqual(self.user0.is_following(self.user1), False)
         self.assertEqual(self.user1.is_following(self.user0), False)
@@ -172,7 +179,7 @@ class UserModelTestCase(TestCase):
         
 
     def test_user_is_followed_by(self):
-        '''Does {user}.is_followed_by({other_user}) work as intended'''
+        """Does {user}.is_followed_by({other_user}) work as intended"""
 
         self.assertEqual(self.user0.is_followed_by(self.user1), False)
         self.assertEqual(self.user1.is_followed_by(self.user0), False)

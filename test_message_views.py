@@ -7,7 +7,6 @@
 
 import os
 from unittest import TestCase
-
 from models import db, connect_db, Message, User
 
 # BEFORE we import our app, let's set an environmental variable
@@ -43,31 +42,41 @@ class MessageViewTestCase(TestCase):
 
         self.client = app.test_client()
 
-        self.test_user = User.signup(username="user",
+        self.user0 = User.signup(username="user",
                                     email="test@test.com",
                                     password="password",
-                                    image_url=None)
-        self.user_id = 100000                                
-        self.test_user.id = self.user_id                                  
+                                    image_url=None)                                                            
 
-        msg = Message(id=100000, text='test message', user_id=self.user_id)  
-        self.msg = msg
-        self.msg_id = 100000                        
-
-        db.session.add(msg)
         db.session.commit()
+
+        self.user0_id = self.user0.id  
+    
+        msg0 = Message(text='test message', user_id=self.user0_id)  
+        self.msg0 = msg0        
+
+        db.session.add(msg0)
+        db.session.commit()
+
+        self.msg0_id = msg0.id
+        
+
+    def tearDown(self):
+        """Rollback db.session"""
+
+        db.session.rollback()
 
     def test_add_message(self):
         """Can user add a message?"""
 
-        Message.query.delete()
+        self.assertEqual(len(Message.query.all()), 1)
+        db.session.delete(Message.query.one())
         db.session.commit()
 
         # Since we need to change the session to mimic logging in,
         # we need to use the changing-session trick:
         with self.client as c:
             with c.session_transaction() as sess:
-                sess[CURR_USER_KEY] = self.user_id
+                sess[CURR_USER_KEY] = self.user0_id
 
             # Now, that session setting is saved, so we can have
             # the rest of ours test
@@ -75,8 +84,8 @@ class MessageViewTestCase(TestCase):
 
             # Make sure it redirects
             self.assertEqual(resp.status_code, 302)
-            msg = Message.query.one()
-            self.assertEqual(msg.text, "Hello")
+            msg0 = Message.query.one()
+            self.assertEqual(msg0.text, "Hello")
 
     def test_not_logged_in_add_message(self):
         """If a user isn't logged in and tries to add a message, 
@@ -92,21 +101,22 @@ class MessageViewTestCase(TestCase):
 
         with self.client as c:
             with c.session_transaction() as sess:
-                sess[CURR_USER_KEY] = self.user_id
+                sess[CURR_USER_KEY] = self.user0_id
 
             self.assertEqual(len(Message.query.all()), 1)
 
-            resp = c.post(f"/messages/{self.msg_id}/delete")
+            resp = c.post(f"/messages/{self.msg0_id}/delete")
 
             self.assertEqual(resp.status_code, 302)
             self.assertEqual(len(Message.query.all()), 0)
 
     def test_not_logged_in_delete_message(self):
         """If a user isn't logged in and tries to delete a message, 
-           response 200 should be returned."""
+           response 200 should be returned after redirect."""
 
         with self.client as c:
-            resp = c.post(f"/messages/{self.msg_id}/delete", follow_redirects=True)
+            resp = c.post(f"/messages/{self.msg0_id}/delete", follow_redirects=True)
+            
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access unauthorized", str(resp.data))
 
@@ -114,7 +124,8 @@ class MessageViewTestCase(TestCase):
         """Does a message's page properly display the message information?"""
 
         with self.client as c:
-            resp = c.get(f"/messages/{self.msg_id}", follow_redirects=True)
+            resp = c.get(f"/messages/{self.msg0_id}", follow_redirects=True)
+
             self.assertEqual(resp.status_code, 200)
             self.assertIn("user", str(resp.data))
             self.assertIn("test message", str(resp.data))

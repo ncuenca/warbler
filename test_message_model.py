@@ -3,7 +3,6 @@
 
 import os
 from unittest import TestCase
-from sqlalchemy import exc
 from models import db, User, Message, Follows
 
 os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
@@ -14,7 +13,7 @@ db.create_all()
 
 
 class MessageModelTestCase(TestCase):
-    """Test views for messages."""
+    """Test models for messages."""
 
     def setUp(self):
         """Create test client, add sample data."""
@@ -23,15 +22,20 @@ class MessageModelTestCase(TestCase):
         Message.query.delete()
         Follows.query.delete()
 
-        user0 = User(username='test0', email='test0@email.com', password='password0')
-        user0.id = 100
+        user0 = User.signup(
+                            username='test0', 
+                            email='test0@email.com', 
+                            password='password0',
+                            image_url=None)
+
+        db.session.commit()
 
         msg0 = Message(
             text="test message0",
-            user_id="100",
+            user_id=user0.id,
         )
 
-        db.session.add_all([user0, msg0])
+        db.session.add(msg0)
         db.session.commit()
 
         self.user0 = user0
@@ -53,7 +57,7 @@ class MessageModelTestCase(TestCase):
 
         msg1 = Message(
             text="test message1",
-            user_id="100",
+            user_id=self.user0.id,
         )
 
         db.session.add(msg1)
@@ -69,11 +73,10 @@ class MessageModelTestCase(TestCase):
         self.assertEqual(len(self.user0.liked_messages), 0)
 
         self.user0.liked_messages.append(self.msg0)
-
         db.session.commit()
 
         self.assertEqual(len(self.msg0.liked_by), 1)
         self.assertEqual(len(self.user0.liked_messages), 1)
 
-        # Tests is_liked_by() function
+        # Tests {msg}.is_liked_by({user}) function
         self.assertEqual(self.msg0.is_liked_by(self.user0), True)
