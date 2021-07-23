@@ -10,7 +10,7 @@
           <a href="{{ url_for('users_show', user_id=message.user.id) }}">
             <img src="{{ message.user.image_url }}" alt="" class="timeline-image">
           </a>
-          <div class="message-area">
+          <div class="message-area" data-message-id="{{ message.id }}">
             <div class="message-heading">
               <h3><a href="/users/{{ message.user.id }}">@{{ message.user.username }}</a></h3>
               {% if g.user %}
