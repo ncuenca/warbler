@@ -56,7 +56,9 @@
             <img src="{{ g.user.image_url }}" alt="{{ g.user.username }}">
           </a>
         </li>
-        <li><a href="/messages/new">New Message</a></li>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal">
+          New Message
+        </button>
         <!-- TODO: MAKE FORM -->
         <li><a href="/logout">Log out</a></li>
       {% endif %}
@@ -75,7 +77,35 @@
   {% endblock %}
 
 </div>
-
+{% if g.user %}
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action='/messages/new' method="POST">
+          {{ message_form.csrf_token }}
+          <div>
+            {% if message_form.text.errors %}
+              {% for error in form.text.errors %}
+                <span class="text-danger">
+              {{ error }}
+            </span>
+              {% endfor %}
+            {% endif %}
+            {{ message_form.text(placeholder="What's happening?", class="form-control", rows="3") }}
+          </div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-outline-success btn-block">Add my message!</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 <script src="https://unpkg.com/jquery"></script>
 <script src="https://unpkg.com/axios/dist/axios.js"></script>
 <script src="{{ url_for('static', filename='app.js') }}"></script>

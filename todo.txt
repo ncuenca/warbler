@@ -1,0 +1,2 @@
+Pop-up modal add jQuery to make it seemless?
+Make logouts a form/post

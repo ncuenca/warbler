@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm, UpdateUserForm
+from forms import UserAddForm, LoginForm, MessageForm, UpdateUserForm, OnlyCsrfForm
 from models import db, connect_db, User, Message, Like
 
 CURR_USER_KEY = "curr_user"
@@ -73,6 +73,7 @@ def signup():
     """
 
     form = UserAddForm()
+    message_form = MessageForm()
 
     if form.validate_on_submit():
         try:
@@ -93,7 +94,7 @@ def signup():
         return redirect("/")
 
     else:
-        return render_template('users/signup.html', form=form)
+        return render_template('users/signup.html', form=form, message_form=message_form)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -139,6 +140,8 @@ def list_users():
     Can take a 'q' param in querystring to search by that username.
     """
 
+    message_form = MessageForm()
+
     search = request.args.get('q')
 
     if not search:
@@ -146,16 +149,18 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    return render_template('users/index.html', users=users)
+    return render_template('users/index.html', users=users, message_form=message_form)
 
 
 @app.route('/users/<int:user_id>')
 def users_show(user_id):
     """Show user profile."""
 
+    message_form = MessageForm()
+
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user)
+    return render_template('users/show.html', user=user, message_form=message_form)
 
 
 @app.route('/users/<int:user_id>/following')
@@ -166,8 +171,10 @@ def show_following(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
+    message_form = MessageForm()
+
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user)
+    return render_template('users/following.html', user=user, message_form=message_form)
 
 
 @app.route('/users/<int:user_id>/followers')
@@ -178,8 +185,10 @@ def users_followers(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
+    message_form = MessageForm()
+
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user)
+    return render_template('users/followers.html', user=user, message_form=message_form)
 
 
 @app.route('/users/follow/<int:follow_id>', methods=['POST'])
@@ -220,6 +229,7 @@ def profile():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
+    message_form = MessageForm()
     form = UpdateUserForm(
         username=g.user.username,
         email=g.user.email,
@@ -249,7 +259,7 @@ def profile():
             return redirect('/')
 
     else:
-        return render_template("/users/edit.html", form=form, user=g.user)
+        return render_template("/users/edit.html", form=form, user=g.user, message_form=message_form)
 
 
 @app.route('/users/delete', methods=["POST"])
@@ -298,8 +308,10 @@ def messages_add():
 def messages_show(message_id):
     """Show a message."""
 
+    message_form = MessageForm()    
+    
     msg = Message.query.get(message_id)
-    return render_template('messages/show.html', message=msg)
+    return render_template('messages/show.html', message=msg, message_form=message_form)
 
 
 @app.route('/messages/<int:message_id>/delete', methods=["POST"])
@@ -343,9 +355,11 @@ def like_message(message_id):
 def liked_messages_show(user_id):
     """Show user's likes"""
 
+    message_form = MessageForm()
+
     user = User.query.get_or_404(user_id)
 
-    return render_template('messages/liked.html', user=user)
+    return render_template('messages/liked.html', user=user, message_form=message_form)
 
 ##############################################################################
 # Homepage and error pages
@@ -361,6 +375,8 @@ def homepage():
  
     if g.user:
 
+        message_form = MessageForm()
+
         followed_user_ids = {followed_user.id for followed_user in g.user.following}
         followed_user_ids.add(g.user.id) # also display logged in user's messages
 
@@ -370,7 +386,7 @@ def homepage():
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages)
+        return render_template('home.html', messages=messages, message_form=message_form)
 
     else:
         return render_template('home-anon.html')
